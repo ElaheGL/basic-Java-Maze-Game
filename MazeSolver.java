@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.JButton;
 
@@ -81,5 +82,33 @@ public class MazeSolver {
         Collections.reverse(path);
         return path;
     }
+    public void createRandomWalls(JButton[][] mazeCells, int mazeSize, int numWalls) {
+     
+    
+        Point start = null, finish = null;
+        for (int i = 0; i < mazeSize; i++) {
+            for (int j = 0; j < mazeSize; j++) {
+                if (mazeCells[i][j].getBackground().equals(Color.GREEN)) {
+                    start = new Point(i, j);
+                } else if (mazeCells[i][j].getBackground().equals(Color.PINK)) {
+                    finish = new Point(i, j);
+                }
+            }
+        }
 
+        
+        int minX = Math.min(start.x, finish.x);
+        int maxX = Math.max(start.x, finish.x);
+        int minY = Math.min(start.y, finish.y);
+        int maxY = Math.max(start.y, finish.y);
+
+      
+        for (int i = 0; i < numWalls; i++) {
+            int randomX = ThreadLocalRandom.current().nextInt(minX + 1, maxX +1);
+            int randomY = ThreadLocalRandom.current().nextInt(minY + 1, maxY +1);
+            mazeCells[randomX][randomY].setBackground(Color.DARK_GRAY);
+        }
+    }
 }
+
+

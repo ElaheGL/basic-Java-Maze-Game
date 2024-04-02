@@ -7,10 +7,14 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -22,9 +26,10 @@ public class MazeGameGUI extends JFrame implements ActionListener{
 	private JPanel keepbuttons;
 	private JButton[][] mazecells;
 	private MazeSolver MazeSolver;
+	private JComboBox<String> speedBox;
 	
 
-	private boolean startpoint,finishpoint,wallspoint;
+	private boolean startpoint,finishpoint,wallspoint,autoWall;
 	int mazeSize;
 	
 	public MazeGameGUI(int userEnter) {
@@ -45,14 +50,19 @@ public class MazeGameGUI extends JFrame implements ActionListener{
 		JButton start = new InfoButton("START POINT",this,Color.cyan);
 		JButton finish = new InfoButton("FINISH POINT",this,Color.cyan);
 		JButton walls = new InfoButton("BUILD WALLS",this,Color.cyan);
-		JButton solve = new InfoButton("SOLVE",this,Color.cyan);
+		JButton autowalls = new InfoButton("Atomatic WALLS",this,Color.cyan);
 		JButton reset = new InfoButton("RESET",this,Color.cyan);
+	    speedBox = new JComboBox<>(new String[] {"Fast Solve","Normal Solve"
+				,"Slow Solve"});
+		speedBox.setBackground(Color.cyan);
+		speedBox.addActionListener(new ComboBoxListener());
 		
 		keepbuttons = new JPanel();
 		keepbuttons.add(start);
 		keepbuttons.add(finish);
 		keepbuttons.add(walls);
-		keepbuttons.add(solve);
+		keepbuttons.add(autowalls);
+		keepbuttons.add(speedBox);
 		keepbuttons.add(reset);
 		getContentPane().add(keepbuttons, BorderLayout.SOUTH);
 	
@@ -115,28 +125,79 @@ public class MazeGameGUI extends JFrame implements ActionListener{
 									        
 				}
 		
-}
-		if (((JButton) e.getSource()).getText().equals("SOLVE")) {
-			List<Point> path = MazeSolver.solveMaze(mazecells, mazeSize); // Solve the maze
-			if (path.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "There is no path from the start point"
-                		+ " to the finish point.", "No Path", JOptionPane.WARNING_MESSAGE);
-            } else {
-            highlightPath(path);} // Highlight the path
-		   
 		}
 		
+	 //////////////////////////////////////////////////////////////////////////////  
+		if (((JButton) e.getSource()).getText().equals("Atomatic WALLS")) {
+			autoWall = true;
+			int numWalls = 20; 
+		    MazeSolver.createRandomWalls(mazecells, mazeSize, numWalls);
+		    autoWall = false;
+		    }
 		
+	    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////	
+	private void solveMazeWithDelay(int delay) {
+		List<Point> path = MazeSolver.solveMaze(mazecells, mazeSize); // Solve the maze
+		if (path.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "There is no path from the start point"
+            		+ " to the finish point.", "No Path", JOptionPane.WARNING_MESSAGE);
+        }
+			else {
+				highlightPath(path,delay);} // Highlight the path
 	}
-	private void highlightPath(List<Point> path) {
 		
-			for (Point point : path) {
-				mazecells[point.x][point.y].setBackground(Color.yellow);}
-		
-		
-        startpoint = false;
-		finishpoint = false;
-		wallspoint = false;
 	
-}
+	
+	private void highlightPath(List<Point> path, int delay) {
+	    List<Point> pathCopy = new ArrayList<>(path);
+
+	    javax.swing.Timer timer = new javax.swing.Timer(delay, new ActionListener() {
+	        int currentIndex = 0;
+
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+	            if (currentIndex < pathCopy.size()) {
+	                Point point = pathCopy.get(currentIndex);
+	                mazecells[point.x][point.y].setBackground(Color.yellow);
+	                currentIndex++;
+	            } else {
+	                ((javax.swing.Timer) e.getSource()).stop();
+	            }
+	        }
+	    });
+
+	    timer.start();
+		    
+	
+	startpoint = false;
+	finishpoint = false;
+	wallspoint = false; 
+	autoWall = false;
+	
+	
+	}
+	 private class ComboBoxListener implements ActionListener {
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+	            JComboBox<?> comboBox = (JComboBox<?>) e.getSource();
+	            String selectedItem = (String) comboBox.getSelectedItem();
+	            
+	            switch (selectedItem) {
+	                case "Fast Solve":
+	                    solveMazeWithDelay(200);
+	                    break;
+	                case "Normal Solve":
+	                    solveMazeWithDelay(800);
+	                    break;
+	                case "Slow Solve":
+	                    solveMazeWithDelay(1000);
+	                    break;
+	                default:
+	                    break;
+	            }
+	        }
+	    }
+	
 }
